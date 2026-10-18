@@ -85,6 +85,7 @@ class Settings:
     llm_timeout_sec: float      # сколько ждать один ответ модели
     llm_window_sec: float       # кусок видео на один запрос
     llm_frames: int             # сколько кадров из куска отправлять
+    llm_parallel: int           # сколько запросов к модели одновременно
 
     @property
     def uploads_dir(self) -> Path:
@@ -144,4 +145,5 @@ def get_settings() -> Settings:
         llm_timeout_sec=_env_float("OKO_LLM_TIMEOUT_SEC", 40.0),
         llm_window_sec=_env_float("OKO_LLM_WINDOW_SEC", 16.0),
         llm_frames=max(1, _env_int("OKO_LLM_FRAMES", 8)),
+        llm_parallel=max(1, _env_int("OKO_LLM_PARALLEL", 4)),
     )

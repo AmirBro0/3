@@ -181,6 +181,7 @@
     const r = parseRoute();
     const prevView = state.view;
     state.view = r.view; state.id = r.id || null;
+    renderHotbar();
     if (r.view !== 'report') stopLoop();
     const printing = r.view === 'print';
     $('#app').hidden = printing;
@@ -510,7 +511,7 @@
   }
   function renderHotbar() {
     const bar = $('#hotbar');
-    bar.hidden = !state.batch.length || state.view === 'print';
+    bar.hidden = !state.batch.length || state.view === 'print' || state.view === 'report';  // в отчёте не закрываем карточки
     if (bar.hidden) return;
     const items = state.batch.slice(-9);
     const done = state.batch.filter(x => x.phase === 'done' || x.phase === 'failed').length;
@@ -539,7 +540,7 @@
     const isNew = r.status === 'done' && !r.seen;
     const place = [r.branch, r.desk].filter(Boolean).join(' · ') || t('h.noPlace');
     return h('li', null, h('button', { class: `hrow${isNew ? ' is-new' : ''}`, type: 'button', onclick: () => go(`report-${r.job_id}`) },
-      h('span', { class: 'hrow__date' }, fmtDate(dateOf(r)), h('br'), h('span', { class: 'faint' }, fmtDateTime(r.created_at))),
+      h('span', { class: 'hrow__date' }, ...(r.shot_date ? [fmtDate(r.shot_date), h('br'), h('span', { class: 'faint' }, fmtDateTime(r.created_at))] : [fmtDateTime(r.created_at)])),
       h('span', { style: 'min-width:0' }, h('span', { class: 'hrow__file', style: 'display:block' }, r.filename), isNew ? h('span', { class: 'pill pill--new' }, t('h.new')) : null),
       h('span', { class: 'hrow__sub hrow__place' }, place),
       verdictPill(r),
