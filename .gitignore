@@ -1,0 +1,31 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Секреты
+.env
+
+# Рабочие данные сервера: загруженные видео, отчёты, сгенерированный API-ключ
+data/*
+!data/.gitkeep
+
+# Данные кейса не публикуем (правила хакатона): видео, разметка, ТЗ
+*.mov
+*.MOV
+*.mp4
+*.MP4
+*.m4v
+*.avi
+*.mkv
+dataset/
+videos/
+*.xlsx
+*.docx
+
+# Сборки и результаты проверок
+preview.html
+eval_results*.csv
+*.zip
+.DS_Store

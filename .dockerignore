@@ -1,0 +1,9 @@
+data/
+.env
+.git/
+__pycache__/
+*.pyc
+*.mov
+*.mp4
+preview.html
+eval_results.csv

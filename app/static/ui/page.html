@@ -1,0 +1,285 @@
+<title>OKO</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="description" content="OKO: проверка видео с кассы — признаки нарушений, таймкоды, кадры-доказательства и пункты норм НБРК.">
+<style>/*@STYLE@*/</style>
+
+<div id="app">
+<header class="top">
+  <div class="wrap top__in">
+    <a class="brand" href="#check" aria-label="OKO">{{icon:EYE}}<span>OKO</span></a>
+    <nav class="nav" aria-label="Разделы" id="nav">
+      <a href="#check" data-view="check" data-i18n="nav.check">Проверка</a>
+      <a href="#history" data-view="history"><span data-i18n="nav.history">История</span><span class="badge" id="unseen-badge" hidden>0</span></a>
+      <a href="#summary" data-view="summary" data-i18n="nav.summary">Сводка</a>
+      <a href="#norms" data-view="norms" data-i18n="nav.norms">Нормы</a>
+      <a href="#api" data-view="api">API</a>
+    </nav>
+    <div class="top__tools">
+      <span class="status-chip" id="status-chip"><i></i><span id="status-text">…</span></span>
+      <div class="lang">
+        <button class="lang__btn" id="lang-btn" type="button" aria-haspopup="menu" aria-expanded="false"><span id="lang-cur">РУС</span> ▾</button>
+        <div class="lang__menu" id="lang-menu" role="menu" hidden>
+          <button type="button" role="menuitemradio" data-lang="kk">ҚАЗ</button>
+          <button type="button" role="menuitemradio" data-lang="ru">РУС</button>
+          <button type="button" role="menuitemradio" data-lang="en">ENG</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+<p class="demo-banner" id="demo-banner" hidden><span class="wrap" style="display:block" data-i18n="demo.banner"></span></p>
+
+<main class="wrap main" id="main">
+
+  <!-- ── Проверка ── -->
+  <section class="view" id="v-check" aria-labelledby="hero-title">
+    <div class="hero">
+      <div class="hero__copy">
+        <p class="eyebrow" data-i18n="hero.eyebrow">Видеоконтроль кассовой дисциплины</p>
+        <h1 id="hero-title">{{icon:LOGO_BIG}}</h1>
+        <p class="hero__lead" data-i18n="hero.lead"></p>
+        <div class="chips">
+          <span class="chip" data-i18n="chip.local">Работает локально</span>
+          <span class="chip" data-i18n="chip.deadline">Ответ ≤ 5 мин</span>
+          <span class="chip" data-i18n="chip.norms">Нормы НБРК</span>
+        </div>
+      </div>
+
+      <form class="quest upload" id="upload-form" novalidate>
+        <div class="upload__head"><span class="tag" data-i18n="up.tag">Квест</span><h2 data-i18n="up.title">Новая проверка</h2></div>
+        <div class="drop" id="drop" tabindex="0" role="button" aria-describedby="drop-hint">
+          {{icon:UP}}
+          <p class="drop__title" data-i18n="up.drop">Перетащите видео сюда</p>
+          <span class="btn btn--ghost btn--small" data-i18n="up.pick">Выбрать файлы</span>
+          <p class="drop__hint" id="drop-hint"></p>
+        </div>
+        <input id="file-input" type="file" accept=".mov,.mp4,.m4v,.qt,video/quicktime,video/mp4" multiple hidden>
+        <ul class="picked" id="picked" hidden></ul>
+        <div class="meta-fields">
+          <label class="field"><span data-i18n="up.branch">Отделение</span><input class="input" id="f-branch" list="dl-branches" autocomplete="off" data-i18n-ph="up.branch.ph"></label>
+          <label class="field"><span data-i18n="up.desk">Касса</span><input class="input" id="f-desk" list="dl-desks" autocomplete="off" data-i18n-ph="up.desk.ph"></label>
+          <label class="field"><span data-i18n="up.date">Дата съёмки</span><input class="input" id="f-date" type="date"></label>
+        </div>
+        <datalist id="dl-branches"></datalist><datalist id="dl-desks"></datalist>
+        <p class="error" id="upload-error" role="alert" hidden></p>
+        <div class="upload__actions">
+          <button class="btn" id="run-btn" type="submit" disabled data-i18n="up.run0">Проверить</button>
+          <button class="link-btn" id="clear-btn" type="button" hidden data-i18n="up.clear">Очистить</button>
+        </div>
+        <p class="privacy" data-i18n="up.privacy"></p>
+      </form>
+    </div>
+
+    <section class="card batch" id="batch" hidden aria-labelledby="batch-title">
+      <div class="section-head">
+        <h2 id="batch-title"></h2>
+        <button class="btn btn--ghost btn--small" id="notif-btn" type="button" hidden>{{icon:BELL}}<span data-i18n="notif.enable">Включить уведомления</span></button>
+      </div>
+      <ul class="batch__list" id="batch-list"></ul>
+    </section>
+
+    <section class="recent" id="recent" hidden aria-labelledby="recent-title">
+      <div class="section-head"><h2 id="recent-title" data-i18n="recent.title">Последние проверки</h2><a href="#history" class="link-btn" data-i18n="recent.all">Вся история →</a></div>
+      <ul class="rows" id="recent-list"></ul>
+    </section>
+  </section>
+
+  <!-- ── Отчёт ── -->
+  <section class="view" id="v-report" hidden aria-live="polite">
+    <div class="report-top">
+      <button class="link-btn" id="back-btn" type="button" data-i18n="rep.back">← Назад</button>
+      <div class="report-tools">
+        <button class="btn btn--ghost btn--small" id="print-btn" type="button">{{icon:PRINT}}<span data-i18n="rep.print">Отчёт для служебной записки</span></button>
+        <button class="link-btn" id="keys-btn" type="button" data-i18n="rep.keysBtn">Горячие клавиши</button>
+      </div>
+    </div>
+    <p class="empty" id="report-state" hidden></p>
+    <div id="report-body" class="view" hidden>
+      <div class="verdict" id="verdict">
+        <div class="verdict__icon">{{icon:OK}}{{icon:BANG}}</div>
+        <div>
+          <p class="label" data-i18n="rep.verdict">Вердикт по видео</p>
+          <h2 class="verdict__title" id="verdict-title"></h2>
+          <p class="verdict__sub" id="verdict-sub"></p>
+        </div>
+      </div>
+      <dl class="meta-grid" id="meta-grid"></dl>
+      <p class="note" id="report-notes" hidden></p>
+
+      <div class="card watch">
+        <div class="screen" id="screen">
+          <video id="player" controls playsinline preload="metadata" hidden></video>
+          <img id="viewer" alt="" hidden>
+        </div>
+        <div class="loopbar" id="loopbar" hidden><span id="loop-text"></span><button class="btn btn--small" id="loop-stop" type="button" data-i18n="card.stop">■ Стоп</button></div>
+        <p class="screen__cap" id="screen-cap"></p>
+        <div class="timeline" id="timeline">
+          <div class="timeline__head">
+            <h3 class="label" id="tl-title"></h3>
+            <ul class="legend">
+              <li><i style="background:var(--bad)"></i><span data-i18n="legend.bad">нарушение</span></li>
+              <li><i style="background:var(--warn)"></i><span data-i18n="legend.review">на проверку</span></li>
+              <li><i style="background:var(--lav-lo)"></i><span data-i18n="legend.busy">много движения</span></li>
+              <li><i style="background:var(--panel-2)"></i><span data-i18n="legend.calm">спокойно</span></li>
+            </ul>
+          </div>
+          <div class="tl" id="tl" role="group"></div>
+          <div class="tl-scale" aria-hidden="true"><span>0:00</span><span id="tl-end"></span></div>
+        </div>
+      </div>
+
+      <p class="keys" id="keys-line"></p>
+      <div class="section-head"><h2 id="findings-title"></h2></div>
+      <div class="cards" id="cards"></div>
+
+      <details class="fold" id="review-fold" hidden>
+        <summary><span id="review-title"></span><span class="pill pill--muted" data-i18n="review.note">не входит в ответ API</span></summary>
+        <div class="fold__body cards" id="review-list"></div>
+      </details>
+
+      <details class="fold" id="json-fold">
+        <summary data-i18n="rep.json">Ответ API для этого видео</summary>
+        <div class="fold__body">
+          <div class="codebox__bar"><span class="muted" style="font-size:12px" data-i18n="json.note"></span><button class="btn btn--ghost btn--small" id="copy-json" type="button" data-i18n="json.copy">Скопировать JSON</button></div>
+          <pre class="code" id="json-pre" tabindex="0"></pre>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <!-- ── История ── -->
+  <section class="view" id="v-history" hidden aria-labelledby="h-title">
+    <div class="section-head"><div><h1 id="h-title" data-i18n="h.title">История проверок</h1><p class="muted" style="margin-top:8px" data-i18n="h.lead"></p></div></div>
+    <div class="filters" id="h-filters">
+      <label class="field field--wide"><span data-i18n="h.search">Поиск по файлу</span><input class="input" id="hf-q" type="search"></label>
+      <label class="field"><span data-i18n="up.branch">Отделение</span><select class="select" id="hf-branch"></select></label>
+      <label class="field"><span data-i18n="up.desk">Касса</span><select class="select" id="hf-desk"></select></label>
+      <label class="field"><span data-i18n="f.verdict">Вердикт</span><select class="select" id="hf-verdict"></select></label>
+      <label class="field"><span data-i18n="f.status">Разбор</span><select class="select" id="hf-status"></select></label>
+      <label class="field"><span data-i18n="f.from">С</span><input class="input" id="hf-from" type="date"></label>
+      <label class="field"><span data-i18n="f.to">По</span><input class="input" id="hf-to" type="date"></label>
+      <button class="link-btn" id="hf-reset" type="button" data-i18n="f.reset">Сбросить</button>
+    </div>
+    <p class="muted" id="h-count"></p>
+    <ul class="rows" id="h-list"></ul>
+  </section>
+
+  <!-- ── Сводка ── -->
+  <section class="view" id="v-summary" hidden aria-labelledby="s-title">
+    <div><h1 id="s-title" data-i18n="s.title">Сводка для руководителя</h1><p class="muted" style="margin-top:8px" data-i18n="s.lead"></p></div>
+    <div class="filters">
+      <label class="field"><span data-i18n="s.period">Период</span><select class="select" id="sf-period"></select></label>
+      <label class="field"><span data-i18n="up.branch">Отделение</span><select class="select" id="sf-branch"></select></label>
+    </div>
+    <p class="empty" id="s-empty" hidden data-i18n="s.empty"></p>
+    <div id="s-body" class="view">
+      <div class="kpis" id="kpis"></div>
+      <div class="charts">
+        <section class="card chart" aria-labelledby="c1-title"><h3 id="c1-title" data-i18n="s.byType">Нарушения по типам</h3><div class="hbars" id="c-type"></div></section>
+        <section class="card chart" aria-labelledby="c2-title"><h3 id="c2-title" data-i18n="s.byDay">По дням</h3><div class="cols" id="c-day"></div><div class="col-axis" id="c-day-axis"></div></section>
+      </div>
+      <section class="chart" aria-labelledby="c3-title"><h3 id="c3-title" data-i18n="s.byBranch">По отделениям</h3><div class="table-wrap"><table id="t-branch"></table></div></section>
+      <details class="fold"><summary data-i18n="s.table">Показать таблицей</summary><div class="fold__body"><div class="table-wrap"><table id="t-type"></table></div><div class="table-wrap"><table id="t-day"></table></div></div></details>
+    </div>
+  </section>
+
+  <!-- ── Нормы ── -->
+  <section class="view" id="v-norms" hidden aria-labelledby="n-title">
+    <div><h1 id="n-title" data-i18n="n.title">Нарушения и нормы</h1><p class="muted read" style="margin-top:8px;max-width:72ch" data-i18n="n.lead"></p></div>
+    <ul class="levels">
+      <li><span class="lvl lvl--A">A</span><span data-i18n="n.lvA"></span></li>
+      <li><span class="lvl lvl--B">B</span><span data-i18n="n.lvB"></span></li>
+      <li><span class="lvl lvl--C">C</span><span data-i18n="n.lvC"></span></li>
+    </ul>
+    <div class="cat" id="catalog"></div>
+    <div class="two">
+      <section class="card"><h2 style="font-size:18px;margin-bottom:12px" data-i18n="n.sources">Нормативные источники</h2><ul class="src read" id="sources"></ul></section>
+      <section class="card"><h2 style="font-size:18px;margin-bottom:12px" data-i18n="n.notClaimed">Что OKO не утверждает</h2><ul class="plain read" id="not-claimed"></ul></section>
+    </div>
+  </section>
+
+  <!-- ── API ── -->
+  <section class="view" id="v-api" hidden aria-labelledby="a-title">
+    <div><h1 id="a-title" data-i18n="a.title">API для проверки</h1><p class="muted read" style="margin-top:8px;max-width:72ch" data-i18n="a.lead"></p></div>
+    <section class="card endpoint" aria-labelledby="ep1">
+      <div class="endpoint__head"><span class="method">POST</span><h2 class="path" id="ep1">/api/v1/analyze</h2></div>
+      <p class="read" data-i18n="a.post"></p>
+      <div class="codebox">
+        <div class="codebox__bar"><span class="label" data-i18n="a.request">Запрос</span><button class="btn btn--ghost btn--small js-copy" type="button" data-copy="curl-post" data-i18n="a.copy">Скопировать</button></div>
+        <pre class="code" id="curl-post">curl -X POST <span class="js-origin">https://oko.example.kz</span>/api/v1/analyze \
+  -H "X-API-Key: &lt;key&gt;" \
+  -F "file=@video_017.mov"</pre>
+      </div>
+      <pre class="code">{"job_id": "3f2a9c1e", "status": "processing"}</pre>
+    </section>
+    <section class="card endpoint" aria-labelledby="ep2">
+      <div class="endpoint__head"><span class="method method--get">GET</span><h2 class="path" id="ep2">/api/v1/jobs/{job_id}</h2></div>
+      <p class="read" data-i18n="a.get"></p>
+      <div class="codebox">
+        <div class="codebox__bar"><span class="label" data-i18n="a.request">Запрос</span><button class="btn btn--ghost btn--small js-copy" type="button" data-copy="curl-get" data-i18n="a.copy">Скопировать</button></div>
+        <pre class="code" id="curl-get">curl <span class="js-origin">https://oko.example.kz</span>/api/v1/jobs/3f2a9c1e \
+  -H "X-API-Key: &lt;key&gt;"</pre>
+      </div>
+      <pre class="code">{
+  "job_id": "3f2a9c1e",
+  "status": "done",
+  "verdict": "violation",
+  "violations": [
+    {
+      "type": "Кассир покинул рабочее место до окончания обслуживания клиента",
+      "timecode_sec": 44.2,
+      "description": "В 0:44 кассир встаёт и выходит из кабины, клиент остаётся у окна. Почему это может быть нарушением: Кассовому работнику не допускается покидать рабочее место до окончания обслуживания клиента. Источник: Правила осуществления кассовых операций… (утв. постановлением Правления НБРК от 29.11.2019 № 231), п. 22.",
+      "evidence_frames": [{"timestamp_sec": 44.2, "image_base64": "/9j/4AAQ…"}]
+    }
+  ]
+}</pre>
+      <div class="table-wrap"><table id="t-fields"></table></div>
+    </section>
+    <section class="card" aria-labelledby="st-title" style="display:grid;gap:14px">
+      <h2 id="st-title" style="font-size:18px" data-i18n="a.status">Состояние сервиса</h2>
+      <div class="stats" id="stats"></div>
+      <h3 style="font-size:15px;margin-top:6px" data-i18n="a.load">Нагрузочный тест</h3>
+      <p class="read muted" data-i18n="a.loadText"></p>
+      <pre class="code">python scripts/smoke_test.py --url <span class="js-origin">https://oko.example.kz</span> --key &lt;key&gt; --file video.mov --parallel 5</pre>
+    </section>
+    <section class="card" aria-labelledby="err-title" style="display:grid;gap:14px">
+      <h2 id="err-title" style="font-size:18px" data-i18n="a.errors">Ошибки и лимиты</h2>
+      <div class="table-wrap"><table id="t-errors"></table></div>
+      <p class="read" data-i18n="a.limit"></p>
+    </section>
+  </section>
+</main>
+
+<footer class="foot">
+  <div class="wrap foot__in">
+    {{icon:EYE}}
+    <span>OKO <span id="version">0.2.0</span> · Datathon 26</span>
+    <span data-i18n="foot.local"></span>
+    <span data-i18n="foot.hint"></span>
+    <span data-i18n="foot.unofficial"></span>
+  </div>
+</footer>
+
+<div class="hotbar" id="hotbar" hidden>
+  <p class="hotbar__label" id="hotbar-label"></p>
+  <div class="hotbar__slots" id="hotbar-slots"></div>
+</div>
+<div class="toasts" id="toasts" aria-live="polite"></div>
+<div id="icon-sprites" hidden>{{icon:OK}}{{icon:BANG}}{{icon:X}}{{icon:UP}}</div>
+<div class="tip" id="tip" role="tooltip" hidden></div>
+
+<dialog class="lightbox" id="lightbox" aria-labelledby="lb-cap">
+  <div class="dialog__bar"><p id="lb-cap"></p><button class="btn btn--ghost btn--small" id="lb-close" type="button" data-i18n="pr.close">Закрыть</button></div>
+  <img id="lb-img" alt="">
+</dialog>
+<dialog class="modal" id="keys-dialog" aria-labelledby="keys-title">
+  <div class="dialog__bar"><p id="keys-title" data-i18n="rep.keysBtn">Горячие клавиши</p><button class="btn btn--ghost btn--small" id="keys-close" type="button" data-i18n="pr.close">Закрыть</button></div>
+  <div class="dialog__body" id="keys-body"></div>
+</dialog>
+</div>
+
+<div id="print-view" hidden></div>
+
+<script>window.OKO_BOOT = /*OKO_BOOT*/null;</script>
+<script>/*@SCRIPT@*/</script>
+<style>/*@FONTS@*/</style>

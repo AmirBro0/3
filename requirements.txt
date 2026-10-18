@@ -1,0 +1,16 @@
+# Сервис
+fastapi>=0.110,<1
+uvicorn[standard]>=0.29
+python-multipart>=0.0.9
+opencv-python-headless>=4.9,<5
+numpy>=1.26
+pillow>=10.0
+
+# Скрипты проверки (scripts/)
+requests>=2.31
+openpyxl>=3.1
+
+# Когда подключите модели (пример, лицензии разрешают коммерческое использование):
+# torch, torchvision          — BSD
+# rfdetr                      — Apache-2.0 (детектор объектов)
+# transformers, accelerate    — Apache-2.0 (Qwen3-VL: Apache-2.0)
