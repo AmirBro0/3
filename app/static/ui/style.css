@@ -136,7 +136,6 @@ input[type="date"].input{color-scheme:dark}
 .vx-logo{width:min(100%,420px);height:auto;filter:drop-shadow(0 0 24px var(--glow,rgba(155,106,230,.35)))}
 .vx-face{fill:var(--vx-face)} .vx-hi{fill:var(--vx-hi)} .vx-lo{fill:var(--vx-lo)} .vx-depth{fill:var(--vx-depth)}
 .vx-iris{fill:var(--ring)} .vx-iris-hi{fill:var(--lav)} .vx-pupil{fill:var(--space)} .vx-glint{fill:var(--lav-hi)}
-.hero__lead{font-size:17px;line-height:1.75;max-width:34ch}
 .chips{display:flex;flex-wrap:wrap;gap:12px}
 .upload{display:grid;gap:16px}
 .upload__head{display:flex;align-items:center;gap:12px}
@@ -466,3 +465,11 @@ body.is-locked{overflow:hidden}
 .pb-time{font:12px var(--font-px);color:var(--muted);white-space:nowrap}
 .screen video{cursor:pointer}
 @media(max-width:560px){.pb-time{display:none}.pb-btn{min-width:34px;padding:0 4px}}
+
+/* ── Три шага на главной: понятно с первого взгляда ── */
+.steps{list-style:none;margin:18px 0 22px;padding:0;display:grid;gap:10px;max-width:440px;counter-reset:st}
+.steps li{display:flex;align-items:center;gap:12px;padding:10px 12px;background:var(--panel);border:var(--b) solid var(--hair);
+  font:15px/1.35 var(--font-px);counter-increment:st}
+.steps li::before{content:counter(st);display:grid;place-items:center;flex:none;width:26px;height:26px;background:var(--peach);
+  color:var(--on-light);font:700 14px var(--font-px)}
+.steps li svg{width:24px;height:24px;flex:none}
