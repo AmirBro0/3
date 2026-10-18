@@ -446,3 +446,23 @@ body.is-locked{overflow:hidden}
 .icon-btn:hover,.icon-btn:focus-visible{border-color:var(--ring);outline:none}
 @keyframes login-blink{50%{opacity:0}}
 @media(prefers-reduced-motion:reduce){.login__cursor{animation:none}.login__bar{transition:none}}
+
+/* ── Пиксельные иконки разделов ── */
+.px-ico{display:inline-block;width:22px;height:22px;flex:none;image-rendering:pixelated;vertical-align:middle}
+.nav a{display:inline-flex;align-items:center;gap:7px}
+.nav a .px-ico,.nav a svg{width:22px;height:22px}
+
+/* ── Плеер: панель в стиле кнопок Minecraft ── */
+.pbar{display:flex;align-items:center;gap:6px;padding:6px;background:var(--panel-2);border:3px solid var(--hair);border-top:0}
+.pbar[hidden]{display:none}
+.pb-btn{min-width:40px;height:32px;padding:0 8px;border:2px solid #080808;background:#a7a7a7;color:#fff;font:700 13px var(--font-px);
+  text-shadow:1px 1px #333;box-shadow:inset 2px 2px #e5e5e5,inset -2px -2px #555;cursor:pointer}
+.pb-btn:hover,.pb-btn:focus-visible{background:#94a7ca;outline:2px solid #fff;outline-offset:1px}
+.pb-btn:active{background:#777;box-shadow:inset 2px 2px #444,inset -2px -2px #bbb}
+.pb-track{position:relative;flex:1;min-width:60px;height:14px;background:#080808;border:2px solid #555;cursor:pointer}
+.pb-fill{height:100%;width:0;background:#40df39}
+.pb-marks i{position:absolute;top:-5px;bottom:-5px;width:4px;margin-left:-2px;background:var(--bad);box-shadow:0 0 0 1px #080808}
+.pb-marks i.is-review{background:var(--warn)}
+.pb-time{font:12px var(--font-px);color:var(--muted);white-space:nowrap}
+.screen video{cursor:pointer}
+@media(max-width:560px){.pb-time{display:none}.pb-btn{min-width:34px;padding:0 4px}}

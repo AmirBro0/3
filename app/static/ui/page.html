@@ -31,11 +31,11 @@
   <div class="wrap top__in">
     <a class="brand" href="#check" aria-label="OKO">{{icon:EYE}}<span>OKO</span></a>
     <nav class="nav" aria-label="Разделы" id="nav">
-      <a href="#check" data-view="check" data-i18n="nav.check">Проверка</a>
-      <a href="#history" data-view="history"><span data-i18n="nav.history">История</span><span class="badge" id="unseen-badge" hidden>0</span></a>
-      <a href="#summary" data-view="summary" data-i18n="nav.summary">Сводка</a>
-      <a href="#norms" data-view="norms" data-i18n="nav.norms">Нормы</a>
-      <a href="#api" data-view="api">API</a>
+      <a href="#check" data-view="check">{{icon:UP}}<span data-i18n="nav.check">Проверка</span></a>
+      <a href="#history" data-view="history">{{icon:CHEST}}<span data-i18n="nav.history">История</span><span class="badge" id="unseen-badge" hidden>0</span></a>
+      <a href="#summary" data-view="summary">{{icon:MAP}}<span data-i18n="nav.summary">Сводка</span></a>
+      <a href="#norms" data-view="norms">{{icon:BOOK}}<span data-i18n="nav.norms">Нормы</span></a>
+      <a href="#api" data-view="api">{{icon:TERM}}<span>API</span></a>
     </nav>
     <div class="top__tools">
       <span class="status-chip" id="status-chip"><i></i><span id="status-text">…</span></span>
@@ -132,8 +132,17 @@
 
       <div class="card watch">
         <div class="screen" id="screen">
-          <video id="player" controls playsinline preload="metadata" hidden></video>
+          <video id="player" playsinline preload="metadata" hidden></video>
           <img id="viewer" alt="" hidden>
+        </div>
+        <div class="pbar" id="pbar" hidden>
+          <button class="pb-btn" id="pb-play" type="button" title="Пуск / пауза (пробел)">▶</button>
+          <button class="pb-btn" id="pb-back" type="button" title="−1 с">−1с</button>
+          <button class="pb-btn" id="pb-fwd" type="button" title="+1 с">+1с</button>
+          <div class="pb-track" id="pb-track" title="Перейти к моменту"><div class="pb-fill" id="pb-fill"></div><div class="pb-marks" id="pb-marks"></div></div>
+          <span class="pb-time" id="pb-time">0:00,0</span>
+          <button class="pb-btn" id="pb-speed" type="button" title="Скорость">1×</button>
+          <button class="pb-btn" id="pb-full" type="button" title="Во весь экран">⛶</button>
         </div>
         <div class="loopbar" id="loopbar" hidden><span id="loop-text"></span><button class="btn btn--small" id="loop-stop" type="button" data-i18n="card.stop">■ Стоп</button></div>
         <p class="screen__cap" id="screen-cap"></p>

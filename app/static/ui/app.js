@@ -873,6 +873,7 @@
     else if ((k === 'w' || k === 'ц') && v) { e.preventDefault(); toggleWatch(v, state.report); }
     else if ((k === 'c' || k === 'с') && v) { const el = $(`.vcard[data-key="${v.key}"] textarea`); if (el) { e.preventDefault(); el.focus(); } }
     else if (k === 'p' || k === 'з') { e.preventDefault(); go(`print-${state.report.job_id}`); }
+    else if (e.key === ' ' && !pb.bar.hidden) { e.preventDefault(); pb.play.click(); }
   });
 
   /* видео, кадры и «Смотреть» */
@@ -896,7 +897,36 @@
       showFrame(firstMark(r));
       $('#screen-cap').textContent = data.meta && data.meta.origin === 'ui' ? t('screen.nofile') : t('screen.frame', { t: fmtClock(firstMark(r)) });
     }
+    pbSync(); pbMarks();
   }
+  /* пиксельная панель плеера: пуск, ±1 с, скорость, метки нарушений на дорожке */
+  const pb = { bar: $('#pbar'), play: $('#pb-play'), fill: $('#pb-fill'), time: $('#pb-time'), speed: $('#pb-speed'), track: $('#pb-track'), marks: $('#pb-marks') };
+  function pbSync() {
+    const on = !player.hidden && !!player.getAttribute('src');
+    pb.bar.hidden = !on;
+    if (!on) return;
+    const d = player.duration || 0;
+    pb.play.textContent = player.paused ? '▶' : '❚❚';
+    pb.time.textContent = `${fmtTc(player.currentTime)} / ${fmtTc(d)}`;
+    pb.fill.style.width = d ? `${Math.min(100, (player.currentTime / d) * 100)}%` : '0';
+    pb.speed.textContent = `${String(player.playbackRate).replace('.', ',')}×`;
+  }
+  function pbMarks() {
+    const r = state.report && state.report.result, d = player.duration || 0;
+    pb.marks.replaceChildren(...(r && d ? allItems(r).map(v => h('i', {
+      class: (r.violations || []).includes(v) ? '' : 'is-review', style: `left:${Math.min(100, (v.timecode / d) * 100)}%`, title: fmtTc(v.timecode),
+    })) : []));
+  }
+  ['play', 'pause', 'timeupdate', 'ratechange', 'emptied', 'error'].forEach(ev => player.addEventListener(ev, pbSync));
+  player.addEventListener('loadedmetadata', () => { pbSync(); pbMarks(); });
+  pb.play.addEventListener('click', () => { if (player.paused) player.play().catch(() => {}); else player.pause(); });
+  $('#pb-back').addEventListener('click', () => { player.pause(); player.currentTime = Math.max(0, player.currentTime - 1); });
+  $('#pb-fwd').addEventListener('click', () => { player.pause(); player.currentTime = Math.min(player.duration || 0, player.currentTime + 1); });
+  pb.speed.addEventListener('click', () => { const r = player.playbackRate; player.playbackRate = r === 1 ? 0.5 : r === 0.5 ? 0.25 : 1; });
+  $('#pb-full').addEventListener('click', () => { const sc = $('#screen'); if (sc.requestFullscreen) sc.requestFullscreen().catch(() => {}); });
+  pb.track.addEventListener('click', e => { const rc = pb.track.getBoundingClientRect(); if (player.duration) player.currentTime = ((e.clientX - rc.left) / rc.width) * player.duration; });
+  player.addEventListener('click', () => pb.play.click());
+
   function firstMark(r) { const v = r.violations[0] || (r.review || [])[0]; return v ? Math.floor(v.timecode) : 0; }
   function showFrame(sec) {
     viewer.hidden = false;
