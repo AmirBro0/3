@@ -18,6 +18,21 @@ VERSION = "0.2.0"
 log = logging.getLogger("oko.config")
 
 
+def _load_dotenv(path: Path) -> None:
+    """Читает .env рядом с проектом (KEY=VALUE). Переменные окружения важнее файла."""
+    if not path.exists():
+        return
+    for line in path.read_text(encoding="utf-8").splitlines():
+        line = line.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        key, value = line.split("=", 1)
+        os.environ.setdefault(key.strip(), value.strip().strip('"').strip("'"))
+
+
+_load_dotenv(BASE_DIR / ".env")
+
+
 def _env_str(name: str, default: str) -> str:
     raw = os.getenv(name)
     return raw.strip() if raw and raw.strip() else default
@@ -63,6 +78,13 @@ class Settings:
     jpeg_quality: int
     api_extra_fields: bool      # добавлять ли в ответ API поля сверх схемы ТЗ
     max_violations: int
+    # ── МОДЕЛЬ (LLM/VLM). Подключается в .env: OKO_LLM_URL, OKO_LLM_KEY, OKO_LLM_MODEL ──
+    llm_url: str                # адрес OpenAI-совместимого API модели; пусто → заглушка (mock)
+    llm_key: str                # ключ к этому API (если нужен)
+    llm_model: str              # имя модели на сервере
+    llm_timeout_sec: float      # сколько ждать один ответ модели
+    llm_window_sec: float       # кусок видео на один запрос
+    llm_frames: int             # сколько кадров из куска отправлять
 
     @property
     def uploads_dir(self) -> Path:
@@ -96,7 +118,7 @@ def get_settings() -> Settings:
         (data_dir / sub).mkdir(parents=True, exist_ok=True)
 
     detectors = tuple(
-        d.strip() for d in _env_str("OKO_DETECTORS", "obstruction").split(",") if d.strip()
+        d.strip() for d in _env_str("OKO_DETECTORS", "obstruction,llm").split(",") if d.strip()
     )
     return Settings(
         data_dir=data_dir,
@@ -116,4 +138,10 @@ def get_settings() -> Settings:
         jpeg_quality=_env_int("OKO_JPEG_QUALITY", 85),
         api_extra_fields=_env_bool("OKO_API_EXTRA_FIELDS", False),
         max_violations=_env_int("OKO_MAX_VIOLATIONS", 10),
+        llm_url=_env_str("OKO_LLM_URL", ""),
+        llm_key=_env_str("OKO_LLM_KEY", ""),
+        llm_model=_env_str("OKO_LLM_MODEL", "oko"),
+        llm_timeout_sec=_env_float("OKO_LLM_TIMEOUT_SEC", 40.0),
+        llm_window_sec=_env_float("OKO_LLM_WINDOW_SEC", 16.0),
+        llm_frames=max(1, _env_int("OKO_LLM_FRAMES", 8)),
     )

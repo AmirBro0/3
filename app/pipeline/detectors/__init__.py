@@ -11,15 +11,15 @@ import logging
 
 from .base import AnalysisContext, Box, Candidate, Detector
 from .demo import DemoDetector
+from .llm import LLMDetector
 from .obstruction import ObstructionDetector
 
 log = logging.getLogger("oko.detectors")
 
 REGISTRY: dict[str, type[Detector]] = {
     ObstructionDetector.name: ObstructionDetector,
-    DemoDetector.name: DemoDetector,
-    # "cv_rules": CVRulesDetector,   # детектор людей/денег/телефона + правила по зонам
-    # "vlm": VLMDetector,            # см. vlm_stub.py
+    LLMDetector.name: LLMDetector,     # модель команды; адрес — OKO_LLM_URL в .env
+    DemoDetector.name: DemoDetector,   # только для проверки интерфейса
 }
 
 
