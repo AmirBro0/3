@@ -3,6 +3,11 @@
    это официальная редакция актов НБРК. Ответ API для жюри тоже всегда на русском. */
 window.OKO_I18N = {
   ru: {
+    'login.tag': 'ВИДЕО ПОД КОНТРОЛЕМ', 'login.welcome': '> Добро пожаловать на пост наблюдения.', 'login.label': 'X-API ключ',
+    'login.connect': 'Подключиться', 'login.checking': 'Подключение к серверу…', 'login.fail': 'Не удалось подключиться к серверу',
+    'login.back': 'К вводу ключа', 'login.bad': 'Неверный X-API ключ', 'login.net': 'Сервер не отвечает', 'login.empty': 'Введите X-API ключ',
+    'login.hint': 'Ключ печатается при запуске сервера и лежит в data/api_key.txt', 'login.hintDemo': 'Демо без сервера: подойдёт любой ключ',
+    'nav.logout': 'Выйти',
     'nav.check': 'Проверка', 'nav.history': 'История', 'nav.summary': 'Сводка', 'nav.norms': 'Нормы',
     'status.queue': '{dev} · очередь {n}', 'status.demo': 'Демо', 'status.offline': 'Нет связи',
     'demo.banner': 'Демо-режим: страница открыта без сервера анализа. Данные ниже — примеры; при загрузке своего видео анализ имитируется, а отметки нарушений вымышленные.',
@@ -104,6 +109,11 @@ window.OKO_I18N = {
   },
 
   kk: {
+    'login.tag': 'БЕЙНЕ БАҚЫЛАУДА', 'login.welcome': '> Бақылау бекетіне қош келдіңіз.', 'login.label': 'X-API кілті',
+    'login.connect': 'Қосылу', 'login.checking': 'Серверге қосылуда…', 'login.fail': 'Серверге қосылу мүмкін болмады',
+    'login.back': 'Кілтті енгізуге оралу', 'login.bad': 'X-API кілті қате', 'login.net': 'Сервер жауап бермейді', 'login.empty': 'X-API кілтін енгізіңіз',
+    'login.hint': 'Кілт сервер іске қосылғанда шығады және data/api_key.txt файлында', 'login.hintDemo': 'Серверсіз демо: кез келген кілт жарайды',
+    'nav.logout': 'Шығу',
     'nav.check': 'Тексеру', 'nav.history': 'Тарих', 'nav.summary': 'Жиынтық', 'nav.norms': 'Нормалар',
     'status.queue': '{dev} · кезек {n}', 'status.demo': 'Демо', 'status.offline': 'Байланыс жоқ',
     'demo.banner': 'Демо режим: бет талдау серверінсіз ашылған. Төмендегі деректер — мысалдар; өз бейнеңізді жүктесеңіз, талдау имитацияланады, ал бұзушылық белгілері ойдан шығарылған.',
@@ -205,6 +215,11 @@ window.OKO_I18N = {
   },
 
   en: {
+    'login.tag': 'VIDEO UNDER WATCH', 'login.welcome': '> Welcome to the watch post.', 'login.label': 'X-API key',
+    'login.connect': 'Connect', 'login.checking': 'Connecting to the server…', 'login.fail': 'Could not connect to the server',
+    'login.back': 'Back to key', 'login.bad': 'Wrong X-API key', 'login.net': 'Server is not responding', 'login.empty': 'Enter the X-API key',
+    'login.hint': 'The key is printed when the server starts and saved in data/api_key.txt', 'login.hintDemo': 'Demo without a server: any key works',
+    'nav.logout': 'Log out',
     'nav.check': 'Check', 'nav.history': 'History', 'nav.summary': 'Summary', 'nav.norms': 'Rules',
     'status.queue': '{dev} · queue {n}', 'status.demo': 'Demo', 'status.offline': 'Offline',
     'demo.banner': 'Demo mode: this page runs without the analysis server. The data below are samples; uploading your own video simulates the analysis and the violation marks are made up.',

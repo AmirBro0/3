@@ -8,12 +8,13 @@ API для жюри (раздел 10 ТЗ):
 """
 from __future__ import annotations
 
+import hashlib
 import logging
 import secrets
 from contextlib import asynccontextmanager
 from pathlib import Path
 
-from fastapi import Depends, FastAPI, File, Form, Header, HTTPException, Query, UploadFile
+from fastapi import Cookie, Depends, FastAPI, File, Form, Header, HTTPException, Query, Response, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import HTMLResponse
@@ -65,6 +66,32 @@ def jobs() -> JobManager:
 def require_api_key(x_api_key: str | None = Header(default=None, alias="X-API-Key")) -> None:
     if not x_api_key or not any(secrets.compare_digest(x_api_key, k) for k in settings.api_keys):
         raise HTTPException(status_code=401, detail="Неверный или отсутствующий заголовок X-API-Key.")
+
+
+# ── Вход в интерфейс: тот же X-API ключ, после входа — cookie на 12 часов ────
+SESSION_COOKIE = "oko_session"
+
+
+def _key_ok(key: str | None) -> bool:
+    return bool(key) and any(secrets.compare_digest(key, k) for k in settings.api_keys)
+
+
+def _session_token(key: str) -> str:
+    # В cookie лежит не сам ключ, а его хеш
+    return hashlib.sha256(f"oko-ui:{key}".encode()).hexdigest()
+
+
+def _session_ok(token: str | None) -> bool:
+    return bool(token) and any(secrets.compare_digest(token, _session_token(k)) for k in settings.api_keys)
+
+
+def require_ui_session(x_api_key: str | None = Header(default=None, alias="X-API-Key"),
+                       oko_session: str | None = Cookie(default=None)) -> None:
+    if not (_key_ok(x_api_key) or _session_ok(oko_session)):
+        raise HTTPException(status_code=401, detail="Войдите по X-API ключу.")
+
+
+UI_AUTH = [Depends(require_ui_session)]
 
 
 async def _accept_upload(file: UploadFile | None, origin: str, meta: dict) -> dict:
@@ -144,12 +171,36 @@ def report_page(job_id: str) -> HTMLResponse:
     return HTMLResponse(render_page(_boot()), headers={"Cache-Control": "no-store"})
 
 
+class SessionIn(BaseModel):
+    key: str
+
+
+@app.post("/ui/v1/session", tags=["ui"])
+def ui_login(body: SessionIn, response: Response) -> dict:
+    key = body.key.strip()
+    if not _key_ok(key):
+        raise HTTPException(status_code=401, detail="Неверный X-API ключ.")
+    response.set_cookie(SESSION_COOKIE, _session_token(key), max_age=12 * 3600, httponly=True, samesite="strict")
+    return {"ok": True}
+
+
+@app.get("/ui/v1/session", tags=["ui"])
+def ui_session(oko_session: str | None = Cookie(default=None)) -> dict:
+    return {"authenticated": _session_ok(oko_session)}
+
+
+@app.delete("/ui/v1/session", tags=["ui"])
+def ui_logout(response: Response) -> dict:
+    response.delete_cookie(SESSION_COOKIE)
+    return {"ok": True}
+
+
 @app.get("/ui/v1/health", tags=["ui"])
 def ui_health() -> dict:
     return {"ok": True, "version": VERSION, "detectors": list(settings.detectors), "local_only": True}
 
 
-@app.get("/ui/v1/status", tags=["ui"])
+@app.get("/ui/v1/status", dependencies=UI_AUTH, tags=["ui"])
 def ui_status() -> dict:
     return jobs().status_info()
 
@@ -159,7 +210,7 @@ def ui_catalog() -> dict:
     return catalog_payload()
 
 
-@app.post("/ui/v1/analyze", tags=["ui"])
+@app.post("/ui/v1/analyze", dependencies=UI_AUTH, tags=["ui"])
 async def ui_analyze(
     file: UploadFile | None = File(default=None),
     branch: str = Form(default=""), desk: str = Form(default=""), shot_date: str = Form(default=""),
@@ -169,17 +220,17 @@ async def ui_analyze(
     return await _accept_upload(file, "ui", meta)
 
 
-@app.get("/ui/v1/history", tags=["ui"])
+@app.get("/ui/v1/history", dependencies=UI_AUTH, tags=["ui"])
 def ui_history() -> dict:
     return {"items": jobs().history()}
 
 
-@app.get("/ui/v1/jobs/status", tags=["ui"])
+@app.get("/ui/v1/jobs/status", dependencies=UI_AUTH, tags=["ui"])
 def ui_jobs_status(ids: str = Query(default="")) -> dict:
     return {"items": jobs().statuses([x for x in ids.split(",") if x.strip()])}
 
 
-@app.get("/ui/v1/jobs/{job_id}", tags=["ui"])
+@app.get("/ui/v1/jobs/{job_id}", dependencies=UI_AUTH, tags=["ui"])
 def ui_job(job_id: str) -> dict:
     m = jobs()
     job = m.get(job_id)
@@ -188,7 +239,7 @@ def ui_job(job_id: str) -> dict:
     return ui_view(job, m, settings)
 
 
-@app.get("/ui/v1/jobs/{job_id}/api", tags=["ui"])
+@app.get("/ui/v1/jobs/{job_id}/api", dependencies=UI_AUTH, tags=["ui"])
 def ui_job_api(job_id: str) -> dict:
     job = jobs().get(job_id)
     if job is None:
@@ -196,7 +247,7 @@ def ui_job_api(job_id: str) -> dict:
     return api_view(job, settings)
 
 
-@app.post("/ui/v1/jobs/{job_id}/seen", tags=["ui"])
+@app.post("/ui/v1/jobs/{job_id}/seen", dependencies=UI_AUTH, tags=["ui"])
 def ui_job_seen(job_id: str) -> dict:
     if not jobs().mark_seen(job_id):
         raise HTTPException(404, "Задача не найдена.")
@@ -209,7 +260,7 @@ class ReviewIn(BaseModel):
     comment: str = ""
 
 
-@app.post("/ui/v1/jobs/{job_id}/review", tags=["ui"])
+@app.post("/ui/v1/jobs/{job_id}/review", dependencies=UI_AUTH, tags=["ui"])
 def ui_job_review(job_id: str, body: ReviewIn) -> dict:
     reviews = jobs().set_review(job_id, body.key, body.decision, body.comment)
     if reviews is None:
@@ -217,7 +268,7 @@ def ui_job_review(job_id: str, body: ReviewIn) -> dict:
     return {"reviews": reviews}
 
 
-@app.get("/ui/v1/jobs/{job_id}/clip/{key}", tags=["ui"])
+@app.get("/ui/v1/jobs/{job_id}/clip/{key}", dependencies=UI_AUTH, tags=["ui"])
 def ui_job_clip(job_id: str, key: str) -> dict:
     clip = jobs().clip(job_id, key)
     if clip is None:

@@ -4,6 +4,29 @@
 <style>/*@STYLE@*/</style>
 
 <div id="app">
+<!-- ── Вход: X-API ключ (экран в духе «Подключения к серверу» из репо 1) ── -->
+<div class="login" id="login" hidden>
+  <div class="login__box">
+    <div class="login__brand">{{icon:LOGO_BIG}}<p class="login__tag" data-i18n="login.tag">ВИДЕО ПОД КОНТРОЛЕМ</p></div>
+    <form class="login__state" id="login-form" data-state="form" novalidate>
+      <p class="login__msg"><span id="login-typed"></span><span class="login__cursor" aria-hidden="true">_</span></p>
+      <label for="login-key" data-i18n="login.label">X-API ключ</label>
+      <input id="login-key" type="password" autocomplete="off" autocapitalize="off" spellcheck="false" maxlength="256">
+      <p class="login__hint" id="login-hint"></p>
+      <button class="mcbtn" type="submit" data-i18n="login.connect">Подключиться</button>
+    </form>
+    <div class="login__state" data-state="checking" hidden aria-live="polite">
+      <p data-i18n="login.checking">Подключение к серверу…</p>
+      <div class="login__track"><div class="login__bar" id="login-bar"></div></div>
+    </div>
+    <div class="login__state" data-state="fail" hidden aria-live="assertive">
+      <p data-i18n="login.fail">Не удалось подключиться к серверу</p>
+      <p class="login__reason" id="login-reason"></p>
+      <button class="mcbtn" type="button" id="login-back" data-i18n="login.back">К вводу ключа</button>
+    </div>
+  </div>
+</div>
+
 <header class="top">
   <div class="wrap top__in">
     <a class="brand" href="#check" aria-label="OKO">{{icon:EYE}}<span>OKO</span></a>
@@ -24,6 +47,7 @@
           <button type="button" role="menuitemradio" data-lang="en">ENG</button>
         </div>
       </div>
+      <button class="icon-btn" id="logout-btn" type="button" data-i18n-title="nav.logout" title="Выйти">⏻</button>
     </div>
   </div>
 </header>

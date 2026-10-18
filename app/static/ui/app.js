@@ -91,6 +91,7 @@
     document.documentElement.lang = LANG;
     $$('[data-i18n]').forEach(el => { const v = t(el.dataset.i18n); if (typeof v === 'string') el.textContent = v; });
     $$('[data-i18n-ph]').forEach(el => { el.placeholder = t(el.dataset.i18nPh); });
+    $$('[data-i18n-title]').forEach(el => { el.title = t(el.dataset.i18nTitle); el.setAttribute('aria-label', el.title); });
     $('#lang-cur').textContent = { kk: 'ҚАЗ', ru: 'РУС', en: 'ENG' }[LANG];
     $$('#lang-menu button').forEach(b => b.setAttribute('aria-checked', String(b.dataset.lang === LANG)));
     $('#drop-hint').textContent = t('up.hint', { mb: LIMITS.max_upload_mb });
@@ -113,6 +114,7 @@
   /* ── API: сервер или демо ─────────────────────────────────────────────── */
   async function getJSON(url, opts) {
     const r = await fetch(url, Object.assign({ cache: 'no-store' }, opts || {}));
+    if (r.status === 401) Login.require();
     if (!r.ok) { const e = new Error(`HTTP ${r.status}`); e.status = r.status; try { e.detail = (await r.json()).detail; } catch (x) { /* нет тела */ } throw e; }
     return r.json();
   }
@@ -126,6 +128,7 @@
         xhr.onload = () => {
           let body = null;
           try { body = JSON.parse(xhr.responseText); } catch (e) { /* не JSON */ }
+          if (xhr.status === 401) Login.require();
           if (xhr.status >= 200 && xhr.status < 300 && body && body.job_id) resolve(body.job_id);
           else reject(new Error(body && body.detail ? String(body.detail) : `HTTP ${xhr.status}`));
         };
@@ -1152,6 +1155,69 @@
     $('#not-claimed').replaceChildren(...nc.map(x => h('li', null, x)));
   }
 
+
+  /* ── вход по X-API ключу ─────────────────────────────────────────────── */
+  const Login = (() => {
+    const box = $('#login'), input = $('#login-key'), bar = $('#login-bar');
+    let waiting = [], typing = 0;
+    const sleep = ms => new Promise(r => setTimeout(r, ms));
+    function setState(name) { $$('.login__state', box).forEach(el => { el.hidden = el.dataset.state !== name; }); }
+    function typeText(text) {
+      const out = $('#login-typed'); const my = ++typing; out.textContent = '';
+      [...text].forEach((ch, i) => setTimeout(() => { if (my === typing) out.textContent += ch; }, 28 * i));
+    }
+    function show() {
+      if (box.hidden) {
+        box.hidden = false;
+        document.body.classList.add('is-locked');
+        setState('form');
+        $('#login-hint').textContent = t(LIVE ? 'login.hint' : 'login.hintDemo');
+        typeText(t('login.welcome'));
+        setTimeout(() => input.focus(), 60);
+      }
+      return new Promise(resolve => waiting.push(resolve));
+    }
+    function fail(reason) { $('#login-reason').textContent = reason; setState('fail'); setTimeout(() => $('#login-back').focus(), 30); }
+    async function submit(e) {
+      e.preventDefault();
+      const key = input.value.trim();
+      if (!key) { fail(t('login.empty')); return; }
+      setState('checking'); bar.style.width = '15%';
+      requestAnimationFrame(() => { bar.style.width = '70%'; });
+      try {
+        if (LIVE) {
+          const r = await fetch('/ui/v1/session', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ key }), cache: 'no-store' });
+          if (!r.ok) { fail(r.status === 401 ? t('login.bad') : `${t('login.net')} (HTTP ${r.status})`); return; }
+        } else {
+          await sleep(500);
+          try { sessionStorage.setItem('oko-demo-in', '1'); } catch (x) { /* не важно */ }
+        }
+      } catch (err) { fail(t('login.net')); return; }
+      bar.style.width = '100%';
+      await sleep(280);
+      input.value = '';
+      box.hidden = true;
+      document.body.classList.remove('is-locked');
+      const w = waiting; waiting = []; w.forEach(f => f());
+    }
+    $('#login-form').addEventListener('submit', submit);
+    $('#login-back').addEventListener('click', () => { setState('form'); input.select(); input.focus(); });
+    $('#logout-btn').addEventListener('click', async () => {
+      if (LIVE) { try { await fetch('/ui/v1/session', { method: 'DELETE' }); } catch (e) { /* всё равно покажем вход */ } }
+      else { try { sessionStorage.removeItem('oko-demo-in'); } catch (x) { /* не важно */ } }
+      show().then(() => location.reload());
+    });
+    return {
+      show,
+      // любой ответ 401 посреди работы: просим ключ и повторяем текущий экран
+      require() { if (box.hidden) show().then(() => route()); },
+      async needed() {
+        if (!LIVE) { try { return sessionStorage.getItem('oko-demo-in') !== '1'; } catch (x) { return true; } }
+        try { const r = await fetch('/ui/v1/session', { cache: 'no-store' }); return !(await r.json()).authenticated; } catch (e) { return true; }
+      },
+    };
+  })();
+
   /* ── старт ───────────────────────────────────────────────────────────── */
   async function start() {
     if (!CATALOG && LIVE) { try { CATALOG = await getJSON('/ui/v1/catalog'); } catch (e) { /* без каталога */ } }
@@ -1166,5 +1232,5 @@
     setInterval(refreshStatus, 10000);
     if (LIVE) setInterval(() => { if (!document.hidden) refreshHistory(); }, 30000);
   }
-  start();
+  (async () => { applyStatic(); if (await Login.needed()) await Login.show(); start(); })();
 })();
