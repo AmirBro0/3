@@ -10,7 +10,6 @@ from __future__ import annotations
 import logging
 
 from .base import AnalysisContext, Box, Candidate, Detector
-from .demo import DemoDetector
 from .llm import LLMDetector
 from .obstruction import ObstructionDetector
 
@@ -19,7 +18,6 @@ log = logging.getLogger("oko.detectors")
 REGISTRY: dict[str, type[Detector]] = {
     ObstructionDetector.name: ObstructionDetector,
     LLMDetector.name: LLMDetector,     # модель команды; адрес — OKO_LLM_URL в .env
-    DemoDetector.name: DemoDetector,   # только для проверки интерфейса
 }
 
 
